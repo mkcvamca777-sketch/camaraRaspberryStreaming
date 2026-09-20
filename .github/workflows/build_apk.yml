@@ -28,6 +28,45 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Regenerar Plataforma Android y Gradle Wrapper
+        run: |
+          cd mobile_app
+          flutter create --platforms=android --org com.telepresence .
+
+      - name: Inyectar Permisos en AndroidManifest
+        run: |
+          python3 -c "
+          manifest_path = 'mobile_app/android/app/src/main/AndroidManifest.xml'
+          with open(manifest_path, 'r') as f:
+              content = f.read()
+          perms = '''
+              <uses-permission android:name=\"android.permission.INTERNET\" />
+              <uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\" />
+              <uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\" />
+              <uses-permission android:name=\"android.permission.RECORD_AUDIO\" />
+              <uses-permission android:name=\"android.permission.MODIFY_AUDIO_SETTINGS\" />
+              <uses-permission android:name=\"android.permission.CAMERA\" />
+          '''
+          if 'android.permission.INTERNET' not in content:
+              content = content.replace('<application', perms + '\n    <application')
+              with open(manifest_path, 'w') as f:
+                  f.write(content)
+          "
+
+      - name: Ajustar minSdkVersion a 21
+        run: |
+          python3 -c "
+          import os, re
+          gradle_path = 'mobile_app/android/app/build.gradle'
+          if os.path.exists(gradle_path):
+              with open(gradle_path, 'r') as f:
+                  txt = f.read()
+              txt = re.sub(r'minSdk\s*=\s*flutter\.minSdkVersion', 'minSdk = 21', txt)
+              txt = re.sub(r'minSdkVersion\s+flutter\.minSdkVersion', 'minSdkVersion 21', txt)
+              with open(gradle_path, 'w') as f:
+                  f.write(txt)
+          "
+
       - name: Obtener Dependencias
         run: |
           cd mobile_app
