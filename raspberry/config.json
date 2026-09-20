@@ -1,0 +1,36 @@
+{
+  "server": {
+    "host": "0.0.0.0",
+    "ws_port": 8765,
+    "rtc_signaling_port": 8080
+  },
+  "serial": {
+    "port": "/dev/ttyACM0",
+    "fallback_port": "/dev/ttyUSB0",
+    "baudrate": 115200,
+    "timeout": 0.1,
+    "mock_mode": true
+  },
+  "safety": {
+    "heartbeat_timeout_ms": 350,
+    "max_speed_limit": 1.0,
+    "failsafe_stop_on_disconnect": true
+  },
+  "camera": {
+    "width": 1280,
+    "height": 720,
+    "fps": 30,
+    "device_index": 0
+  },
+  "audio": {
+    "sample_rate": 48000,
+    "channels": 1,
+    "input_device": "hw:1,0",
+    "output_device": "hw:0,0"
+  },
+  "telemetry": {
+    "interval_seconds": 1.0,
+    "i2c_bus": 1,
+    "ina219_address": "0x40"
+  }
+}
