@@ -28,7 +28,7 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Regenerar Plataforma Android y Gradle Wrapper
+      - name: Regenerar Plataforma Android
         run: |
           cd mobile_app
           flutter create --platforms=android --org com.telepresence .
@@ -53,34 +53,32 @@ jobs:
                   f.write(content)
           "
 
-      - name: Configurar minSdk 21 y Signing Config Debug
+      - name: Configurar minSdk 21 en Gradle
         run: |
           python3 -c "
           import os, re
-          gradle_path = 'mobile_app/android/app/build.gradle'
-          if os.path.exists(gradle_path):
-              with open(gradle_path, 'r') as f:
-                  txt = f.read()
-              txt = re.sub(r'minSdk\s*=\s*flutter\.minSdkVersion', 'minSdk = 21', txt)
-              txt = re.sub(r'minSdkVersion\s+flutter\.minSdkVersion', 'minSdkVersion 21', txt)
-              # Asegurar que release firme con debug keys para permitir instalacion directa
-              if 'signingConfigs.debug' not in txt:
-                  txt = txt.replace('buildTypes {', 'buildTypes {\n        release {\n            signingConfig signingConfigs.debug\n        }')
-              with open(gradle_path, 'w') as f:
-                  f.write(txt)
+          for fname in ['mobile_app/android/app/build.gradle', 'mobile_app/android/app/build.gradle.kts']:
+              if os.path.exists(fname):
+                  with open(fname, 'r') as f:
+                      txt = f.read()
+                  txt = re.sub(r'minSdk\s*=\s*flutter\.minSdkVersion', 'minSdk = 21', txt)
+                  txt = re.sub(r'minSdkVersion\s+flutter\.minSdkVersion', 'minSdkVersion 21', txt)
+                  with open(fname, 'w') as f:
+                      f.write(txt)
           "
 
-      - name: Obtener Dependencias y Analizar
+      - name: Obtener Dependencias
         run: |
           cd mobile_app
           flutter pub get
-          flutter analyze || true
 
-      - name: Compilar APK (Debug y Release)
+      - name: Compilar APK
         run: |
           cd mobile_app
-          flutter build apk --debug
-          flutter build apk --release --no-tree-shake-icons || true
+          flutter build apk --debug --verbose > build.log 2>&1 || {
+            tail -n 120 build.log
+            exit 1
+          }
 
       - name: Subir APK como Artefacto Descargable
         uses: actions/upload-artifact@v4
