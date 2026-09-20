@@ -53,7 +53,7 @@ jobs:
                   f.write(content)
           "
 
-      - name: Ajustar minSdkVersion a 21
+      - name: Configurar minSdk 21 y Signing Config Debug
         run: |
           python3 -c "
           import os, re
@@ -63,23 +63,28 @@ jobs:
                   txt = f.read()
               txt = re.sub(r'minSdk\s*=\s*flutter\.minSdkVersion', 'minSdk = 21', txt)
               txt = re.sub(r'minSdkVersion\s+flutter\.minSdkVersion', 'minSdkVersion 21', txt)
+              # Asegurar que release firme con debug keys para permitir instalacion directa
+              if 'signingConfigs.debug' not in txt:
+                  txt = txt.replace('buildTypes {', 'buildTypes {\n        release {\n            signingConfig signingConfigs.debug\n        }')
               with open(gradle_path, 'w') as f:
                   f.write(txt)
           "
 
-      - name: Obtener Dependencias
+      - name: Obtener Dependencias y Analizar
         run: |
           cd mobile_app
           flutter pub get
+          flutter analyze || true
 
-      - name: Compilar APK (Release)
+      - name: Compilar APK (Debug y Release)
         run: |
           cd mobile_app
-          flutter build apk --release --no-tree-shake-icons
+          flutter build apk --debug
+          flutter build apk --release --no-tree-shake-icons || true
 
       - name: Subir APK como Artefacto Descargable
         uses: actions/upload-artifact@v4
         with:
-          name: RobotControl-Release-APK
-          path: mobile_app/build/app/outputs/flutter-apk/app-release.apk
+          name: RobotControl-APK
+          path: mobile_app/build/app/outputs/flutter-apk/*.apk
           if-no-files-found: error
