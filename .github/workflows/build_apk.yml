@@ -5,7 +5,7 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
-  workflow_dispatch: # Permite compilar manualmente desde la web de GitHub
+  workflow_dispatch:
 
 jobs:
   build:
@@ -25,7 +25,6 @@ jobs:
       - name: Configurar Flutter SDK
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.22.x'
           channel: 'stable'
           cache: true
 
